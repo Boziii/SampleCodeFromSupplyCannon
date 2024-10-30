@@ -1,0 +1,159 @@
+﻿<div class="synch-component" *ngIf="toggleWindow">
+    <div class="innerPOPup">
+    <div class="synch-header">
+        <h3>
+            <a href="javascript:void(0)" [routerLink]="['/customer/manageSuppliers']" data-toggle="tooltip"
+                *ngIf="!favoritesSyncRunning || !fullSyncRunning"
+                title="Only products from distributors that have been verified will be synced.  If a sync is not working, please navigate to the manage distributors page and verify distributors">
+                <i class="fa fa-info-circle" style="color: white;"></i>
+            </a>
+            Distributor Sync
+        </h3>
+        <button type="button" class="synch-close-icon" (click)="opencloseToggle(false)">X</button>
+    </div>
+
+    <div class="synch-content">
+        <ul class="synch-content-list scl-scrollbar refresh-synch-content-list">
+            <li>
+                <div class="sc-title">
+                </div>
+                <div class="sc-favsync">
+                    <button type="button" class="synch-button" *ngIf="!favoritesSyncRunning"
+                        (click)="requestSync(null, true, false, false, null)">
+                        <i class="fa fa-refresh"></i>
+                    </button>
+                    <div class="sync-time">
+                        Sync All Distributors
+                    </div>
+                </div>
+                <div class="sc-fullsync">
+                    <button type="button" class="synch-button" *ngIf="!fullSyncRunning && allowFullSync"
+                        (click)="requestSync(null, false, false, true, null)">
+                        <i class="fa fa-refresh"></i>
+                    </button>
+                    <div *ngIf="!allowFullSync">
+                        Disabled
+                    </div>
+                    <div class="sync-time">
+                        Sync All Distributors
+                    </div>
+                </div>
+                <div class="sc-substitutesync">
+                </div>
+
+                <div class="sc-invoicesync">
+                </div>
+
+            </li>
+            <li class="scl-header">
+                <div class="sc-title">Title</div>
+                <div class="sc-favsync">Favorites Sync</div>
+                <div class="sc-fullsync">Full Sync</div>
+                <div class="sc-substitutesync">Substitute Sync</div>
+                <div class="sc-invoicesync">Invoice Sync</div>
+            </li>
+            <li *ngFor="let suplier of suppliers;let i = index;">
+                <div class="sc-title">
+                    {{suplier.supplierName}}
+                </div>
+                <div class="sc-favsync" *ngIf="suplier.verified">
+                    <div class="scf-box">
+                        <div *ngIf="suplier.favoritesRunning || favoritesSyncComplete[i].status==1" class="progress">
+                            <div class="progress-bar progress-bar-orange progress-bar-striped progress-bar-animated active"
+                                role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"
+                                [style.width.%]="100">
+                                {{suplier.favoritesStatusMessage}}
+                            </div>
+                            <div class="close-button" (click)="cancelFavoritesSync(suplier)">
+                                <i class="fa fa-times-circle-o"></i>
+                            </div>
+                        </div>
+                        <button type="button" class="synch-button"
+                            *ngIf="!suplier.favoritesRunning && suplier.allowFavoriteSync && favoritesSyncComplete!= undefined && favoritesSyncComplete[i].status!=1"
+                            (click)="requestSync(suplier.supplierId, true, false, false, null)"
+                            [ngClass]="{'success': favoritesSyncComplete[i].status==2}">
+                            <i class="fa"
+                                [ngClass]="{'fa-refresh': favoritesSyncComplete[i].status!=2, 'fa-check': favoritesSyncComplete[i].status==2}"></i>
+                        </button>
+                        <div *ngIf="!suplier.allowFavoriteSync">
+                            Disabled
+                        </div>
+                        <div class="sync-time">
+                            <ng-container *ngIf="suplier.favoritesLastSyncDate!=null">Last Time:
+                                {{suplier.favoritesLastSyncDate | date : "MM/dd/yyyy"}}</ng-container>
+                            <ng-container *ngIf="suplier.favoritesLastSyncDate==null">Last Time: Never</ng-container>
+                        </div>
+                    </div>
+                </div>
+                <div class="sc-fullsync" *ngIf="suplier.verified">
+                    <div class="scf-box">
+                        <div *ngIf="suplier.fullSyncRunning" class="progress">
+                            <div class="progress-bar progress-bar-orange progress-bar-striped progress-bar-animated active"
+                                role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"
+                                [style.width.%]="100">
+                                {{suplier.fullSyncStatusMessage}}
+                            </div>
+                            <div class="close-button" (click)="cancelFullSync(suplier)">
+                                <i class="fa fa-times-circle-o"></i>
+                            </div>
+                        </div>
+                        <button type="button" class="synch-button"
+                            *ngIf="!suplier.fullSyncRunning && suplier.allowFullSync && fullSyncComplete!= undefined"
+                            (click)="requestSync(suplier.supplierId, false, false, true, null)"
+                            [ngClass]="{'success': fullSyncComplete[i].status==2}">
+                            <i class="fa"
+                                [ngClass]="{'fa-refresh': fullSyncComplete[i].status!=2, 'fa-check': fullSyncComplete[i].status==2}"></i>
+                        </button>
+                        <div *ngIf="!suplier.allowFullSync">
+                            Disabled
+                        </div>
+                        <div class="sync-time">
+                            <ng-container *ngIf="suplier.fullSyncLastSyncDate!=null">Last Time:
+                                {{suplier.fullSyncLastSyncDate | date : "MM/dd/yyyy"}}</ng-container>
+                            <ng-container *ngIf="suplier.fullSyncLastSyncDate==null">Last Time: Never</ng-container>
+                        </div>
+                    </div>
+                </div>
+                <div class="sc-substitutesync" *ngIf="suplier.verified">
+                    <div class="scf-box">
+                        <div *ngIf="suplier.substituteSyncRunning" class="progress">
+                            <div class="progress-bar progress-bar-orange progress-bar-striped progress-bar-animated active"
+                                role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"
+                                [style.width.%]="100">
+                                {{suplier.substituteSyncStatusMessage}}
+                            </div>
+                            <div class="close-button" (click)="cancelSubstituteSync(suplier)">
+                                <i class="fa fa-times-circle-o"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sc-invoicesync" *ngIf="suplier.verified">
+                    <div class="scf-box">
+                        <div *ngIf="suplier.invoiceSyncRunning" class="progress">
+                            <div class="close-button" (click)="cancelInvoiceSync(suplier)">
+                                <i class="fa fa-times-circle-o"></i>
+                            </div>
+                        </div>
+                        <div *ngIf="!suplier.invoiceSyncRunning">
+                            <ng-container *ngIf="suplier.invoiceLastSyncDate!=null">Last Time:
+                                {{suplier.invoiceLastSyncDate | date : "MM/dd/yyyy"}}</ng-container>
+                            <ng-container *ngIf="suplier.invoiceLastSyncDate==null">Last Time: Never</ng-container>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sc-fullsync-btn-box" *ngIf="!suplier.verified">
+                    Not Verified
+                </div>
+            </li>
+
+        </ul>
+    </div>
+</div>
+</div>
+<div class="synch-icon" *ngIf="showMenu===true" [ngClass]="(favoritesSyncRunning || fullSyncRunning || substituteSyncRunning || invoiceSyncRunning)?'rotating':''"
+    (click)="opencloseToggle(!toggleWindow, 0)">
+    <i class="fa fa-refresh"></i>
+</div>
